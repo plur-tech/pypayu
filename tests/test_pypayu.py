@@ -17,6 +17,12 @@ def test_authentication(requests_mock):
     requests_mock.get('https://secure.snd.payu.com/api/v2_1/paymethods', request_headers={'Authorization': f'Bearer {access_token}'}, json={})
     api.pay_methods()
 
+def test_authentication_wrong_credentials(requests_mock):
+    requests_mock.post('https://secure.snd.payu.com/pl/standard/user/oauth/authorize', status_code=401, json={'error': 'invalid_client', 'error_description': 'Bad client credentials'})
+    with pytest.raises(PayUError) as payu_error:
+        api = PayUApi('wrong', 'wrong')
+    assert "Bad client credentials" in str(payu_error.value)
+
 def test_sandbox_on_off(requests_mock):
     sandbox_token = 'sandbox_token'
     requests_mock.post('https://secure.snd.payu.com/pl/standard/user/oauth/authorize', json={'access_token': sandbox_token})
@@ -40,7 +46,7 @@ def test_raise_for_status(requests_mock, payu_api):
     requests_mock.get(f'/api/v2_1/orders/{order_id}', status_code=500)
     with pytest.raises(PayUError) as payu_error:
         payu_api.order_status(order_id=order_id)
-    assert "NO ERROR STATUS" in str(payu_error.value)
+    assert "RESPONSE FORMAT" in str(payu_error.value)
 
 def test_params_send_with_request(requests_mock, payu_api):
     order_id='123456'

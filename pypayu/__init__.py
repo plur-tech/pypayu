@@ -16,8 +16,12 @@ def raise_for_status(response):
     try:
         error_data = response.json()
     except:
-        raise PayUError(f"{response.url} - NO ERROR STATUS")    
-    raise PayUError(f"{response.url} - {error_data['status']['statusCode']}: {error_data['status']['statusDesc']}")
+        raise PayUError(f"{response.url} - RESPONSE FORMAT")
+    if all(elem in error_data.keys() for elem in ('error', 'error_description')):
+        raise PayUError(f"{response.url} - {error_data['error']}: {error_data['error_description']}")
+    elif 'status' in error_data:
+        raise PayUError(f"{response.url} - {error_data['status']['statusCode']}: {error_data['status']['statusDesc']}")
+    raise PayUError(f"{response.url} - UNKNOWN ERROR")
 
 @uplink.returns.json
 @uplink.response_handler(raise_for_status)
@@ -68,7 +72,6 @@ class PayUApi(uplink.Consumer):
         else:
             kwargs['base_url'] = 'https://secure.payu.com'
         super().__init__(**kwargs)
-        self.session.allow_redirects = False
         response = self.authorize(client_id, client_secret)
         access_token = response['access_token']
         self.session.headers["Authorization"] = f'Bearer {access_token}'
