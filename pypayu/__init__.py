@@ -1,9 +1,11 @@
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 import uplink
 
 class PayUError(Exception):
-    pass
+    def __init__(self, message, raw_error=dict()):
+        super().__init__(message)
+        self.raw_error = raw_error
 
 def no_redirects(response):
     if response.history:
@@ -18,10 +20,10 @@ def raise_for_status(response):
     except:
         raise PayUError(f"{response.url} - RESPONSE FORMAT")
     if all(elem in error_data.keys() for elem in ('error', 'error_description')):
-        raise PayUError(f"{response.url} - {error_data['error']}: {error_data['error_description']}")
+        raise PayUError(f"{response.url} - {error_data['error']}: {error_data['error_description']}", raw_error=error_data)
     elif 'status' in error_data:
-        raise PayUError(f"{response.url} - {error_data['status']['statusCode']}: {error_data['status']['statusDesc']}")
-    raise PayUError(f"{response.url} - UNKNOWN ERROR")
+        raise PayUError(f"{response.url} - {error_data['status']['statusCode']}: {error_data['status']['statusDesc']}", raw_error=error_data)
+    raise PayUError(f"{response.url} - UNKNOWN ERROR", raw_error=error_data)
 
 @uplink.returns.json
 @uplink.response_handler(raise_for_status)

@@ -38,9 +38,11 @@ def test_sandbox_on_off(requests_mock):
 
 def test_raise_for_status(requests_mock, payu_api):
     order_id='123456'
-    requests_mock.get(f'/api/v2_1/orders/{order_id}', status_code=400, json={'status': {'statusCode': "ERROR_ORDER_NOT_UNIQUE", 'statusDesc': "desc"}})
+    error_resp = {'status': {'statusCode': "ERROR_ORDER_NOT_UNIQUE", 'statusDesc': "desc"}}
+    requests_mock.get(f'/api/v2_1/orders/{order_id}', status_code=400, json=error_resp)
     with pytest.raises(PayUError) as payu_error:
         payu_api.order_status(order_id=order_id)
+    assert payu_error.value.raw_error == error_resp
     assert "ERROR_ORDER_NOT_UNIQUE" in str(payu_error.value)
 
     requests_mock.get(f'/api/v2_1/orders/{order_id}', status_code=500)
