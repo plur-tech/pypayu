@@ -60,6 +60,13 @@ def test_params_send_with_request(requests_mock, payu_api):
     requests_mock.post(f"/api/v2_1/orders/{order_id}/refunds", additional_matcher=match_request_order_refund_params, json={'status': {'statusCode': "SUCCESS", 'statusDesc': "Status was updated"}})
     payu_api.order_full_refund(order_id=order_id)
 
+def test_partial_refound(requests_mock, payu_api):
+    order_id='123456'
+    def match_request_order_refund_params(request):
+        return request.json() ==  {"refund": {"description": "Refund", "amount": 900}}
+    requests_mock.post(f"/api/v2_1/orders/{order_id}/refunds", additional_matcher=match_request_order_refund_params, json={'status': {'statusCode': "SUCCESS", 'statusDesc': "Status was updated"}})
+    payu_api.order_refund(order_id=order_id, data={"refund": {"description": "Refund", "amount": 900}})
+
 def test_timeout_and_retries(requests_mock, payu_api):
     requests_mock.get('/api/v2_1/paymethods', exc=requests.exceptions.ConnectTimeout)
     with pytest.raises(requests.exceptions.ConnectTimeout):

@@ -57,6 +57,11 @@ class PayUApi(uplink.Consumer):
     def order_full_refund(self, order_id, data: uplink.Body = {"refund": {"description": "Refund"}}):
         pass
 
+    @uplink.json
+    @uplink.post("/api/v2_1/orders/{order_id}/refunds")
+    def order_refund(self, order_id, data: uplink.Body):
+        pass
+
     @uplink.get("/api/v2_1/orders/{order_id}/transactions")
     def get_transactions(self, order_id):
         pass
